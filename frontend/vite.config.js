@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 'taxbuddydemo.vercel.app',
+    port: 5173,
     proxy: {
       '/api': {
         target: 'https://taxbuddydemo.vercel.app',
