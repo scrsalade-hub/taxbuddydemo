@@ -69,7 +69,7 @@ export default function Users() {
       const token = localStorage.getItem('adminToken');
       const config = { headers: { Authorization: `Bearer ${token}` } };
       
-      await axios.post('/api/admin/notifications/send', {
+      await axios.post(`${API}/api/admin/notifications/send`, {
         userId: selectedUser._id,
         title: notificationTitle,
         message: notificationMessage,
@@ -102,7 +102,7 @@ export default function Users() {
       if (accountTypeFilter !== 'all') filter.accountType = accountTypeFilter;
       if (subscriptionFilter !== 'all') filter.subscription = subscriptionFilter;
       
-      await axios.post('/api/admin/notifications/send-all', {
+      await axios.post(`${API}/api/admin/notifications/send-all`, {
         title: notificationTitle,
         message: notificationMessage,
         type: notificationType,
