@@ -86,7 +86,7 @@ export default function Notifications() {
   };
 
   const handleNotificationClick = (notification) => {
-    navigate(`${API}/notifications/${notification._id}`);
+    navigate(`/notifications/${notification._id}`);
   };
 
   const filteredNotifications = notifications.filter(n => {
