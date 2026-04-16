@@ -51,7 +51,7 @@ export default function Notifications() {
     e.stopPropagation();
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`/api/notifications/${id}/read`, {}, {
+      await axios.put(`${API}/api/notifications/${id}/read`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchNotifications();
@@ -63,7 +63,7 @@ export default function Notifications() {
   const markAllAsRead = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`/api/notifications/read-all`, {}, {
+      await axios.put(`${API}/api/notifications/read-all`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchNotifications();
@@ -76,7 +76,7 @@ export default function Notifications() {
     e.stopPropagation();
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`/api/notifications/${id}`, {
+      await axios.delete(`${API}/api/notifications/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchNotifications();
