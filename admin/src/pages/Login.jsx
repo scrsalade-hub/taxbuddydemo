@@ -10,6 +10,7 @@ export default function Login({ setAdmin }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const API = import.meta.env.VITE_API_URL;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,7 +18,7 @@ export default function Login({ setAdmin }) {
     setError('');
 
     try {
-      const { data } = await axios.post('/api/admin/login', { email, password });
+      const { data } = await axios.post(`${API}/api/admin/login`, { email, password });
       setAdmin(data);
       localStorage.setItem('admin', JSON.stringify(data));
       localStorage.setItem('adminToken', data.token);

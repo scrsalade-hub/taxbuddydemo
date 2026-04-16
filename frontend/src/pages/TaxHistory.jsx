@@ -163,7 +163,7 @@ export default function TaxHistory() {
       r.status.toUpperCase()
     ]);
 
-    doc.autoTable({
+    autoTable(doc,{
       startY: 70,
       head: [['Period', 'Type', 'Income', 'Tax Amount', 'Rate', 'Status']],
       body: tableData,

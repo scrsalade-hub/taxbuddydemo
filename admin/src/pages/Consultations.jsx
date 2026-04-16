@@ -16,6 +16,8 @@ const statusIcons = {
   cancelled: XCircle,
 };
 
+const API = import.meta.env.VITE_API_URL;
+
 export default function Consultations() {
   const [consultations, setConsultations] = useState([]);
   const [stats, setStats] = useState({ total: 0, pending: 0, completed: 0, revenue: 0 });
@@ -38,7 +40,7 @@ export default function Consultations() {
     try {
       const token = localStorage.getItem('adminToken');
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      const { data } = await axios.get('/api/admin/consultations', config);
+      const { data } = await axios.get(`${API}/api/admin/consultations`, config);
       setConsultations(data.consultations || []);
     } catch (error) {
       console.error('Failed to fetch consultations:', error);
@@ -51,7 +53,7 @@ export default function Consultations() {
     try {
       const token = localStorage.getItem('adminToken');
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      const { data } = await axios.get('/api/admin/consultations/stats', config);
+      const { data } = await axios.get(`${API}/api/admin/consultations/stats`, config);
       setStats(data);
     } catch (error) {
       console.error('Failed to fetch stats:', error);
@@ -91,7 +93,7 @@ export default function Consultations() {
       const token = localStorage.getItem('adminToken');
       const config = { headers: { Authorization: `Bearer ${token}` } };
       
-      await axios.put(`/api/admin/consultations/${selectedConsultation._id}/status`, {
+      await axios.put(`${API}/api/admin/consultations/${selectedConsultation._id}/status`, {
         status: newStatus,
         notes: statusNotes
       }, config);
@@ -114,7 +116,7 @@ export default function Consultations() {
       const token = localStorage.getItem('adminToken');
       const config = { headers: { Authorization: `Bearer ${token}` } };
       
-      await axios.delete(`/api/admin/consultations/${id}`, config);
+      await axios.delete(`${API}/api/admin/consultations/${id}`, config);
       fetchConsultations();
       fetchStats();
       alert('Consultation deleted!');

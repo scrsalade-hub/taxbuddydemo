@@ -20,11 +20,13 @@ export default function Users() {
     fetchUsers();
   }, []);
 
+  const API = import.meta.env.VITE_API_URL;
+
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('adminToken');
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      const { data } = await axios.get('/api/admin/users', config);
+      const { data } = await axios.get(`${API}/api/admin/users`, config);
       setUsers(data.users || []);
     } catch (error) {
       console.error('Failed to fetch users:', error);

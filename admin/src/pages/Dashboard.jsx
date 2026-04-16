@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Users, Calculator, Calendar, TrendingUp, DollarSign, FileText } from 'lucide-react';
 import axios from 'axios';
 
+
 export default function Dashboard() {
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -11,6 +12,7 @@ export default function Dashboard() {
   });
   const [recentUsers, setRecentUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const API = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     fetchDashboardData();
@@ -21,7 +23,7 @@ export default function Dashboard() {
       const token = localStorage.getItem('adminToken');
       const config = { headers: { Authorization: `Bearer ${token}` } };
       
-      const { data } = await axios.get('/api/admin/dashboard', config);
+      const { data } = await axios.get(`${API}/api/admin/dashboard`, config);
       setStats(data.stats);
       setRecentUsers(data.recentUsers || []);
     } catch (error) {

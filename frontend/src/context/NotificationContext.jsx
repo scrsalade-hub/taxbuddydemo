@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import axios from 'axios';
 
 const NotificationContext = createContext();
+const API = import.meta.env.VITE_API_URL || '';
 
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
@@ -13,7 +14,7 @@ export const NotificationProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       if (!token) return;
       
-      const { data } = await axios.get('/api/notifications', {
+      const { data } = await axios.get(`${API}/api/notifications`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotifications(data);
@@ -26,7 +27,7 @@ export const NotificationProvider = ({ children }) => {
   const markAsRead = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`/api/notifications/${id}/read`, {}, {
+      await axios.put(`${API}/api/notifications/${id}/read`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchNotifications();
@@ -38,7 +39,7 @@ export const NotificationProvider = ({ children }) => {
   const markAllAsRead = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put('/api/notifications/read-all', {}, {
+      await axios.put(`${API}/api/notifications/read-all`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchNotifications();

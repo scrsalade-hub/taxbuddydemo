@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
+const API = import.meta.env.VITE_API_URL || '';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -17,7 +18,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const { data } = await axios.post('/api/users/login', { email, password });
+      const { data } = await axios.post(`${API}/api/users/login`, { email, password });
       setUser(data);
       localStorage.setItem('user', JSON.stringify(data));
       localStorage.setItem('token', data.token);
@@ -29,7 +30,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const { data } = await axios.post('/api/users/register', userData);
+      const { data } = await axios.post(`${API}/api/users/register`, userData);
       setUser(data);
       localStorage.setItem('user', JSON.stringify(data));
       localStorage.setItem('token', data.token);
