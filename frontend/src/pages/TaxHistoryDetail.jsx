@@ -31,6 +31,8 @@ export default function TaxHistoryDetail() {
   const navigate = useNavigate();
   const [record, setRecord] = useState(null);
   const [loading, setLoading] = useState(true);
+  const API = import.meta.env.VITE_API_URL;
+
 
   useEffect(() => {
     fetchRecord();
@@ -39,7 +41,7 @@ export default function TaxHistoryDetail() {
   const fetchRecord = async () => {
     try {
       const token = localStorage.getItem('token');
-      const { data } = await axios.get('/api/tax/records', {
+      const { data } = await axios.get(`${API}/api/tax/records`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const rec = data.find(r => r._id === id);

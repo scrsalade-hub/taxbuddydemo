@@ -19,6 +19,7 @@ const typeColors = {
   important: 'bg-purple-100 text-purple-700 border-purple-300',
 };
 
+const API = import.meta.env.VITE_API_URL;
 export default function Notifications() {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
@@ -35,7 +36,7 @@ export default function Notifications() {
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem('token');
-      const { data } = await axios.get('/api/notifications', {
+      const { data } = await axios.get(`${API}/api/notifications`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotifications(data);
@@ -50,7 +51,7 @@ export default function Notifications() {
     e.stopPropagation();
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`/api/notifications/${id}/read`, {}, {
+      await axios.put(`${API}/api/notifications/${id}/read`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchNotifications();
@@ -62,7 +63,7 @@ export default function Notifications() {
   const markAllAsRead = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put('/api/notifications/read-all', {}, {
+      await axios.put(`${API}/api/notifications/read-all`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchNotifications();
@@ -75,7 +76,7 @@ export default function Notifications() {
     e.stopPropagation();
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`/api/notifications/${id}`, {
+      await axios.delete(`${API}/api/notifications/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchNotifications();
@@ -85,7 +86,7 @@ export default function Notifications() {
   };
 
   const handleNotificationClick = (notification) => {
-    navigate(`/notifications/${notification._id}`);
+    navigate(`${API}/notifications/${notification._id}`);
   };
 
   const filteredNotifications = notifications.filter(n => {

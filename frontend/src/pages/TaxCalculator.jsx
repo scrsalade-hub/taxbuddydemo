@@ -17,6 +17,8 @@ export default function TaxCalculator() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const API = import.meta.env.VITE_API_URL;
+
   const handleCalculate = async () => {
     if (!income || parseFloat(income) <= 0) {
       alert('Please enter a valid income amount');
@@ -25,7 +27,7 @@ export default function TaxCalculator() {
 
     setLoading(true);
     try {
-      const { data } = await axios.post('/api/tax/calculate', {
+      const { data } = await axios.post(`${API}/api/tax/calculate`, {
         income: parseFloat(income),
         expenses: parseFloat(expenses) || 0,
         taxType,
@@ -43,7 +45,7 @@ export default function TaxCalculator() {
 
     setSaving(true);
     try {
-      await axios.post('/api/tax/records', {
+      await axios.post(`${API}/api/tax/records`, {
         month,
         year,
         income: parseFloat(income),

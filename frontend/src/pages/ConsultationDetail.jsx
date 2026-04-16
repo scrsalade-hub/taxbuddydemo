@@ -55,6 +55,8 @@ const statusConfig = {
   },
 };
 
+const API = import.meta.env.VITE_API_URL;
+
 export default function ConsultationDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -68,7 +70,7 @@ export default function ConsultationDetail() {
   const fetchConsultation = async () => {
     try {
       const token = localStorage.getItem('token');
-      const { data } = await axios.get('/api/consultation', {
+      const { data } = await axios.get(`${API}/api/consultation`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const consult = data.find(c => c._id === id);
@@ -85,7 +87,7 @@ export default function ConsultationDetail() {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`/api/consultation/${id}/cancel`, {}, {
+      await axios.put(`${API}/api/consultation/${id}/cancel`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchConsultation();

@@ -26,6 +26,8 @@ export default function TaxHistory() {
   const [monthFilter, setMonthFilter] = useState('all');
   const [loading, setLoading] = useState(true);
 
+  const API = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     fetchRecords();
   }, []);
@@ -36,7 +38,7 @@ export default function TaxHistory() {
 
   const fetchRecords = async () => {
     try {
-      const { data } = await axios.get('/api/tax/records');
+      const { data } = await axios.get(`${API}/api/tax/records`);
       setRecords(data);
     } catch (error) {
       console.error('Error fetching records:', error);
@@ -72,7 +74,7 @@ export default function TaxHistory() {
 
   const handleMarkAsPaid = async (id) => {
     try {
-      await axios.put(`/api/tax/records/${id}/pay`);
+      await axios.put(`${API}/api/tax/records/${id}/pay`);
       fetchRecords();
     } catch (error) {
       alert('Error marking as paid');
@@ -82,7 +84,7 @@ export default function TaxHistory() {
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this record?')) return;
     try {
-      await axios.delete(`/api/tax/records/${id}`);
+      await axios.delete(`${API}/api/tax/records/${id}`);
       fetchRecords();
     } catch (error) {
       alert('Error deleting record');

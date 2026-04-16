@@ -57,6 +57,8 @@ export default function Consultation() {
   const [activeTab, setActiveTab] = useState('book'); // 'book' or 'my-consultations'
   const [loading, setLoading] = useState(true);
 
+  const API = import.meta.env.VITE_API_URL; 
+
   useEffect(() => {
     fetchMyConsultations();
   }, []);
@@ -64,7 +66,7 @@ export default function Consultation() {
   const fetchMyConsultations = async () => {
     try {
       const token = localStorage.getItem('token');
-      const { data } = await axios.get('/api/consultation', {
+      const { data } = await axios.get(`${API}/api/consultation`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMyConsultations(data);
@@ -78,7 +80,7 @@ export default function Consultation() {
   const handleBook = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post('/api/consultation', {
+      await axios.post(`${API}/api/consultation`, {
         consultantName: selectedConsultant.name,
         consultantImage: selectedConsultant.image,
         date: new Date(selectedDate),
