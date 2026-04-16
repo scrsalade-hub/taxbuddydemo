@@ -11,9 +11,8 @@ export default function Landing() {
           <img 
             src={assets.logo} 
             alt="TaxBuddy" 
-            className="w-10 h-10 object-contain bg-white rounded-lg p-1"
+            className=" object-contain bg-white rounded p-2"
           />
-          <span className="text-white font-bold text-xl">TaxBuddy</span>
         </div>
         <div className="flex gap-4">
           <Link to="/login" className="text-white hover:text-gray-200 px-4 py-2">
