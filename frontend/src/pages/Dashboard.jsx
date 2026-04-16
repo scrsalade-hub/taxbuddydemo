@@ -12,14 +12,16 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const API  = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
         const headers = { Authorization: `Bearer ${token}` };
         const [statsRes, recordsRes] = await Promise.all([
-          axios.get('/api/tax/dashboard', { headers }),
-          axios.get('/api/tax/records', { headers }),
+          axios.get(`${API}/api/tax/dashboard`, { headers }),
+          axios.get(`${API}/api/tax/records`, { headers }),
         ]);
         setStats(statsRes.data);
         setRecords(recordsRes.data.slice(0, 5));
