@@ -52,7 +52,7 @@ export default function NotificationDetail() {
   const fetchNotification = async () => {
     try {
       const token = localStorage.getItem('token');
-      const { data } = await axios.get(`/api/notifications`, {
+      const { data } = await axios.get(`${API}/api/notifications`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const notif = data.find(n => n._id === id);
@@ -73,7 +73,7 @@ export default function NotificationDetail() {
   const markAsRead = async (notificationId) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`/api/notifications/${notificationId}/read`, {}, {
+      await axios.put(`${API}/api/notifications/${notificationId}/read`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
     } catch (error) {
@@ -86,7 +86,7 @@ export default function NotificationDetail() {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`/api/notifications/${id}`, {
+      await axios.delete(`${API}/api/notifications/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       navigate('/notifications');
