@@ -36,7 +36,7 @@ export default function Notifications() {
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem('token');
-      const { data } = await axios.get(`/api/notifications`, {
+      const { data } = await axios.get(`${API}/api/notifications`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotifications(data);
@@ -51,7 +51,7 @@ export default function Notifications() {
     e.stopPropagation();
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/notifications/${id}/read`, {}, {
+      await axios.put(`/api/notifications/${id}/read`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchNotifications();
@@ -63,7 +63,7 @@ export default function Notifications() {
   const markAllAsRead = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/notifications/read-all`, {}, {
+      await axios.put('/api/notifications/read-all', {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchNotifications();
@@ -76,7 +76,7 @@ export default function Notifications() {
     e.stopPropagation();
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${API}/api/notifications/${id}`, {
+      await axios.delete(`/api/notifications/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchNotifications();
