@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { assets } from '../assets/assets';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
@@ -33,10 +34,11 @@ export default function Login() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-3">
-            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
-              <span className="text-primary font-bold text-xl">TB</span>
-            </div>
-            <span className="font-bold text-2xl text-white">TaxBuddy</span>
+            <img 
+              src={assets.logo} 
+              alt="TaxBuddy" 
+              className="object-contain w-full bg-white rounded p-1"
+            />
           </Link>
         </div>
 

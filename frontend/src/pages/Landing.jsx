@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { assets } from '../assets/assets';
 import { Calculator, Shield, Bell, FileText, CheckCircle, ArrowRight } from 'lucide-react';
 
 export default function Landing() {
@@ -7,9 +8,11 @@ export default function Landing() {
       {/* Navigation */}
       <nav className="px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-            <span className="text-primary font-bold text-xl">TB</span>
-          </div>
+          <img 
+            src={assets.logo} 
+            alt="TaxBuddy" 
+            className="w-10 h-10 object-contain bg-white rounded-lg p-1"
+          />
           <span className="text-white font-bold text-xl">TaxBuddy</span>
         </div>
         <div className="flex gap-4">

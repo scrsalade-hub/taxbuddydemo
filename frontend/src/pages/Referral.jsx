@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Gift, Copy, Share2, Users, TrendingUp, MessageCircle, Mail } from 'lucide-react';
+import { Gift, Copy, Share2, Users, TrendingUp, Mail, MessageCircle } from 'lucide-react';
 
 const referralStats = {
   totalReferrals: 12,
@@ -84,17 +84,17 @@ export default function Referral() {
         </div>
 
         <div className="flex justify-center gap-4 mt-6">
-          <button className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30">
+          <button className="px-4 py-2 bg-white/20 rounded-lg flex items-center gap-2 hover:bg-white/30">
             <MessageCircle className="w-5 h-5" />
+            <span>WhatsApp</span>
           </button>
-          <button className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30">
+          <button className="px-4 py-2 bg-white/20 rounded-lg flex items-center gap-2 hover:bg-white/30">
             <Mail className="w-5 h-5" />
+            <span>Email</span>
           </button>
-          <button className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30">
+          <button className="px-4 py-2 bg-white/20 rounded-lg flex items-center gap-2 hover:bg-white/30">
             <Share2 className="w-5 h-5" />
-          </button>
-          <button className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30">
-            <Mail className="w-5 h-5" />
+            <span>Share</span>
           </button>
         </div>
       </div>

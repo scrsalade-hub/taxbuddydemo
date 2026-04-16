@@ -4,6 +4,7 @@ import axios from 'axios';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
+import Consultations from './pages/Consultations';
 import Layout from './components/Layout';
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
       <Route element={admin ? <Layout setAdmin={setAdmin} /> : <Navigate to="/login" />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/users" element={<Users />} />
+        <Route path="/consultations" element={<Consultations />} />
       </Route>
     </Routes>
   );

@@ -4,29 +4,29 @@ import axios from 'axios';
 import { TrendingUp, TrendingDown, Wallet, Percent, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const chartData = [
-  { month: 'Jan', income: 400000 },
-  { month: 'Feb', income: 450000 },
-  { month: 'Mar', income: 380000 },
-  { month: 'Apr', income: 520000 },
-  { month: 'May', income: 480000 },
-  { month: 'Jun', income: 600000 },
-];
+const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [records, setRecords] = useState([]);
+  const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const token = localStorage.getItem('token');
+        const headers = { Authorization: `Bearer ${token}` };
         const [statsRes, recordsRes] = await Promise.all([
-          axios.get('/api/tax/dashboard'),
-          axios.get('/api/tax/records'),
+          axios.get('/api/tax/dashboard', { headers }),
+          axios.get('/api/tax/records', { headers }),
         ]);
         setStats(statsRes.data);
         setRecords(recordsRes.data.slice(0, 5));
+        
+        // Generate chart data from real records
+        const monthlyData = generateChartData(recordsRes.data);
+        setChartData(monthlyData);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -35,6 +35,33 @@ export default function Dashboard() {
     };
     fetchData();
   }, []);
+
+  // Generate chart data from user's tax records
+  const generateChartData = (records) => {
+    if (!records || records.length === 0) {
+      // Return empty months if no records
+      return monthNames.map(month => ({ month, income: 0 }));
+    }
+
+    // Group records by month and sum income
+    const monthlyIncome = {};
+    
+    records.forEach(record => {
+      const date = new Date(record.createdAt);
+      const monthKey = monthNames[date.getMonth()];
+      
+      if (!monthlyIncome[monthKey]) {
+        monthlyIncome[monthKey] = 0;
+      }
+      monthlyIncome[monthKey] += (record.income || 0);
+    });
+
+    // Create chart data array for all months
+    return monthNames.map(month => ({
+      month,
+      income: monthlyIncome[month] || 0
+    }));
+  };
 
   const formatCurrency = (amount) => {
     return '₦' + (amount || 0).toLocaleString();

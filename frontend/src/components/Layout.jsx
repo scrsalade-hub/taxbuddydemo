@@ -1,5 +1,7 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
+import { assets } from '../assets/assets';
 import { 
   LayoutDashboard, 
   Calculator, 
@@ -9,7 +11,8 @@ import {
   Menu,
   Crown,
   Gift,
-  Headphones
+  Headphones,
+  Bell
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -17,6 +20,7 @@ const sidebarItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
   { icon: Calculator, label: 'Tax Calculator', path: '/calculator' },
   { icon: History, label: 'Tax History', path: '/history' },
+  { icon: Bell, label: 'Notifications', path: '/notifications', showBadge: true },
 ];
 
 const premiumItems = [
@@ -28,6 +32,7 @@ const premiumItems = [
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuth();
+  const { unreadCount } = useNotifications();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -61,13 +66,11 @@ export default function Layout() {
         {/* Logo */}
         <div className="p-6 border-b border-gray-200">
           <Link to="/dashboard" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">TB</span>
-            </div>
-            <div>
-              <h1 className="font-bold text-xl text-gray-900">TaxBuddy</h1>
-              <p className="text-xs text-gray-500">Tax Simplified</p>
-            </div>
+            <img 
+              src={assets.logo} 
+              alt="TaxBuddy" 
+              className="object-contain"
+            />
           </Link>
         </div>
 
@@ -81,15 +84,22 @@ export default function Layout() {
                 to={item.path}
                 onClick={() => setSidebarOpen(false)}
                 className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all
+                  flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all
                   ${isActive(item.path) 
                     ? 'bg-primary text-white' 
                     : 'text-gray-600 hover:bg-primary-light hover:text-primary'
                   }
                 `}
               >
-                <item.icon className="w-5 h-5" />
-                {item.label}
+                <div className="flex items-center gap-3">
+                  <item.icon className="w-5 h-5" />
+                  {item.label}
+                </div>
+                {item.showBadge && unreadCount > 0 && (
+                  <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </Link>
             ))}
           </div>
@@ -182,6 +192,15 @@ export default function Layout() {
             </div>
 
             <div className="flex items-center gap-4">
+              {/* Notification Bell in Header */}
+              <Link to="/notifications" className="relative p-2 hover:bg-gray-100 rounded-lg">
+                <Bell className="w-6 h-6 text-gray-600" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </Link>
               <span className={`
                 px-3 py-1 rounded-full text-xs font-medium uppercase
                 ${user?.subscription === 'enterprise' ? 'bg-purple-100 text-purple-700' :

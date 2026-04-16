@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import TaxRecord from '../models/TaxRecord.js';
 import Consultation from '../models/Consultation.js';
+import Notification from '../models/Notification.js';
 
 // @desc    Admin login
 // @route   POST /api/admin/login
@@ -105,6 +106,258 @@ export const updateUserStatus = async (req, res) => {
     // You can add a status field to User model if needed
     res.json({ message: 'User status updated' });
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get users with email notification filter
+// @route   GET /api/admin/users/filter
+export const getUsersWithFilter = async (req, res) => {
+  try {
+    const { emailNotifications, accountType, subscription } = req.query;
+    
+    let query = {};
+    
+    if (emailNotifications !== undefined) {
+      query.emailNotifications = emailNotifications === 'true';
+    }
+    
+    if (accountType) {
+      query.accountType = accountType;
+    }
+    
+    if (subscription) {
+      query.subscription = subscription;
+    }
+    
+    const users = await User.find(query)
+      .select('-password')
+      .sort({ createdAt: -1 });
+    
+    res.json({ users, count: users.length });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get all consultations
+// @route   GET /api/admin/consultations
+export const getAllConsultations = async (req, res) => {
+  try {
+    const { status, consultant } = req.query;
+    
+    let query = {};
+    if (status) query.status = status;
+    if (consultant) query.consultantName = consultant;
+    
+    const consultations = await Consultation.find(query)
+      .populate('userId', 'firstName lastName email phone')
+      .sort({ createdAt: -1 });
+    
+    res.json({ consultations });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get consultation by ID
+// @route   GET /api/admin/consultations/:id
+export const getConsultationById = async (req, res) => {
+  try {
+    const consultation = await Consultation.findById(req.params.id)
+      .populate('userId', 'firstName lastName email phone accountType');
+    
+    if (!consultation) {
+      return res.status(404).json({ message: 'Consultation not found' });
+    }
+    
+    res.json(consultation);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update consultation status
+// @route   PUT /api/admin/consultations/:id/status
+export const updateConsultationStatus = async (req, res) => {
+  try {
+    const { status, notes } = req.body;
+    
+    if (!status) {
+      return res.status(400).json({ message: 'Status is required' });
+    }
+    
+    const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
+    
+    const consultation = await Consultation.findById(req.params.id);
+    
+    if (!consultation) {
+      return res.status(404).json({ message: 'Consultation not found' });
+    }
+    
+    const oldStatus = consultation.status;
+    consultation.status = status;
+    if (notes !== undefined) consultation.notes = notes;
+    
+    await consultation.save();
+    
+    // Send notification to user about status update
+    const Notification = (await import('../models/Notification.js')).default;
+    
+    const statusMessages = {
+      pending: 'Your consultation is pending review.',
+      confirmed: 'Your consultation has been confirmed!',
+      completed: 'Your consultation has been completed.',
+      cancelled: 'Your consultation has been cancelled.',
+    };
+    
+    let notificationMessage = statusMessages[status] || `Your consultation status has been updated to ${status}.`;
+    if (notes) {
+      notificationMessage += `\n\nMessage: ${notes}`;
+    }
+    
+    await Notification.create({
+      userId: consultation.userId,
+      title: `Consultation ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+      message: notificationMessage,
+      type: status === 'cancelled' ? 'alert' : status === 'completed' ? 'success' : 'info',
+    });
+    
+    res.json({ message: 'Consultation status updated', consultation });
+  } catch (error) {
+    console.error('Update status error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Delete consultation
+// @route   DELETE /api/admin/consultations/:id
+export const deleteConsultation = async (req, res) => {
+  try {
+    const consultation = await Consultation.findById(req.params.id);
+    
+    if (!consultation) {
+      return res.status(404).json({ message: 'Consultation not found' });
+    }
+    
+    await consultation.deleteOne();
+    res.json({ message: 'Consultation deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get consultation statistics
+// @route   GET /api/admin/consultations/stats
+export const getConsultationStats = async (req, res) => {
+  try {
+    const total = await Consultation.countDocuments();
+    const pending = await Consultation.countDocuments({ status: { $in: ['pending', 'scheduled'] } });
+    const confirmed = await Consultation.countDocuments({ status: 'confirmed' });
+    const completed = await Consultation.countDocuments({ status: 'completed' });
+    const cancelled = await Consultation.countDocuments({ status: 'cancelled' });
+    
+    // Calculate total revenue from consultations
+    const revenue = await Consultation.aggregate([
+      { $match: { status: { $nin: ['cancelled'] } } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    
+    res.json({
+      total,
+      pending,
+      confirmed,
+      completed,
+      cancelled,
+      revenue: revenue[0]?.total || 0
+    });
+  } catch (error) {
+    console.error('Stats error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Send notification to specific user
+// @route   POST /api/admin/notifications/send
+export const sendNotificationToUser = async (req, res) => {
+  try {
+    const { userId, title, message, type = 'info' } = req.body;
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    const notification = new Notification({
+      userId,
+      title,
+      message,
+      type,
+      isRead: false,
+    });
+    
+    await notification.save();
+    
+    res.status(201).json({ 
+      message: 'Notification sent successfully', 
+      notification 
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Send notification to all users
+// @route   POST /api/admin/notifications/send-all
+export const sendNotificationToAllUsers = async (req, res) => {
+  try {
+    const { title, message, type = 'info', filter = {} } = req.body;
+    
+    if (!title || !message) {
+      return res.status(400).json({ message: 'Title and message are required' });
+    }
+    
+    let userQuery = {};
+    
+    // Apply filters if provided
+    if (filter.emailNotifications !== undefined) {
+      userQuery.emailNotifications = filter.emailNotifications;
+    }
+    if (filter.accountType) {
+      userQuery.accountType = filter.accountType;
+    }
+    if (filter.subscription) {
+      userQuery.subscription = filter.subscription;
+    }
+    
+    const users = await User.find(userQuery);
+    
+    if (users.length === 0) {
+      return res.status(200).json({ 
+        message: 'No users match the filter criteria',
+        count: 0
+      });
+    }
+    
+    const notifications = users.map(user => ({
+      userId: user._id,
+      title,
+      message,
+      type,
+      isRead: false,
+    }));
+    
+    await Notification.insertMany(notifications);
+    
+    res.status(201).json({ 
+      message: `Notification sent to ${users.length} users`,
+      count: users.length
+    });
+  } catch (error) {
+    console.error('Send notification error:', error);
     res.status(500).json({ message: error.message });
   }
 };

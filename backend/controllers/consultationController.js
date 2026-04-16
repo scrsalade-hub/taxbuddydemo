@@ -5,15 +5,26 @@ import Notification from '../models/Notification.js';
 // @route   POST /api/consultation
 export const bookConsultation = async (req, res) => {
   try {
+    console.log('Book consultation - req.user:', req.user);
+    console.log('Book consultation - req.body:', req.body);
+
+    if (!req.user) {
+      return res.status(401).json({ message: 'Not authorized, user not found' });
+    }
+
     const { consultantName, consultantImage, date, time, duration, topic, amount } = req.body;
 
+    if (!consultantName || !date || !time || !topic || !amount) {
+      return res.status(400).json({ message: 'Please provide all required fields' });
+    }
+
     const consultation = await Consultation.create({
-      userId: req.user.id,
+      userId: req.user._id,
       consultantName,
       consultantImage,
       date,
       time,
-      duration,
+      duration: duration || 60,
       topic,
       amount,
       meetingLink: `https://meet.taxbuddy.com/session-${Math.random().toString(36).substring(2, 9)}`,
@@ -21,7 +32,7 @@ export const bookConsultation = async (req, res) => {
 
     // Create notification
     await Notification.create({
-      userId: req.user.id,
+      userId: req.user._id,
       title: 'Consultation Booked',
       message: `Your consultation with ${consultantName} has been scheduled for ${new Date(date).toLocaleDateString()} at ${time}`,
       type: 'success',
@@ -29,6 +40,7 @@ export const bookConsultation = async (req, res) => {
 
     res.status(201).json(consultation);
   } catch (error) {
+    console.error('Book consultation error:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -37,9 +49,10 @@ export const bookConsultation = async (req, res) => {
 // @route   GET /api/consultation
 export const getConsultations = async (req, res) => {
   try {
-    const consultations = await Consultation.find({ userId: req.user.id }).sort({ createdAt: -1 });
+    const consultations = await Consultation.find({ userId: req.user._id }).sort({ createdAt: -1 });
     res.json(consultations);
   } catch (error) {
+    console.error('Get consultations error:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -48,7 +61,7 @@ export const getConsultations = async (req, res) => {
 // @route   PUT /api/consultation/:id/cancel
 export const cancelConsultation = async (req, res) => {
   try {
-    const consultation = await Consultation.findOne({ _id: req.params.id, userId: req.user.id });
+    const consultation = await Consultation.findOne({ _id: req.params.id, userId: req.user._id });
     if (!consultation) {
       return res.status(404).json({ message: 'Consultation not found' });
     }
@@ -58,6 +71,7 @@ export const cancelConsultation = async (req, res) => {
 
     res.json({ message: 'Consultation cancelled' });
   } catch (error) {
+    console.error('Cancel consultation error:', error);
     res.status(500).json({ message: error.message });
   }
 };

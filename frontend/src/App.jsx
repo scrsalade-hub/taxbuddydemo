@@ -7,10 +7,14 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import TaxCalculator from './pages/TaxCalculator';
 import TaxHistory from './pages/TaxHistory';
+import TaxHistoryDetail from './pages/TaxHistoryDetail';
 import Profile from './pages/Profile';
 import Consultation from './pages/Consultation';
+import ConsultationDetail from './pages/ConsultationDetail';
 import Subscription from './pages/Subscription';
 import Referral from './pages/Referral';
+import Notifications from './pages/Notifications';
+import NotificationDetail from './pages/NotificationDetail';
 
 function App() {
   const { user, loading } = useAuth();
@@ -33,10 +37,14 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/calculator" element={<TaxCalculator />} />
         <Route path="/history" element={<TaxHistory />} />
+        <Route path="/history/:id" element={<TaxHistoryDetail />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/consultation" element={<Consultation />} />
+        <Route path="/consultation/:id" element={<ConsultationDetail />} />
         <Route path="/subscription" element={<Subscription />} />
         <Route path="/referral" element={<Referral />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/notifications/:id" element={<NotificationDetail />} />
       </Route>
     </Routes>
   );

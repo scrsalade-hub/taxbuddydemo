@@ -1,10 +1,11 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, LogOut, Menu } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, LogOut, Menu } from 'lucide-react';
 import { useState } from 'react';
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
   { icon: Users, label: 'Users', path: '/users' },
+  { icon: Calendar, label: 'Consultations', path: '/consultations' },
 ];
 
 export default function Layout({ setAdmin }) {
