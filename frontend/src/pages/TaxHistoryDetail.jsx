@@ -179,7 +179,7 @@ export default function TaxHistoryDetail() {
             <div className="flex items-center gap-4">
               <div className="w-24 h-24 rounded-full border-4 border-primary flex items-center justify-center">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-primary">{record.taxRate || 0}%</p>
+                  <p className="text-2xl font-bold text-primary">{record.taxRate.toFixed(1) || 0}%</p>
                   <p className="text-xs text-gray-500">Rate</p>
                 </div>
               </div>

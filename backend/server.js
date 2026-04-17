@@ -7,6 +7,7 @@ import taxRoutes from './routes/taxRoutes.js';
 import consultationRoutes from './routes/consultationRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import availabilityRoutes from './routes/availabilityRoutes.js';
 
 dotenv.config();
 connectDB();
@@ -22,6 +23,7 @@ app.use('/api/tax', taxRoutes);
 app.use('/api/consultation', consultationRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/availability', availabilityRoutes);
 
 // Test route
 app.get('/', (req, res) => {

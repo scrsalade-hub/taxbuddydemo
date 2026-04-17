@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Consultations from './pages/Consultations';
+import Availability from './pages/Availability';
 import Layout from './components/Layout';
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/users" element={<Users />} />
         <Route path="/consultations" element={<Consultations />} />
+        <Route path="/availability" element={<Availability />} />
       </Route>
     </Routes>
   );

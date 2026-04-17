@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Calendar, Star, ArrowRight, CheckCircle2, Clock, Headphones, Eye, Clock3, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, Star, ArrowRight, CheckCircle2, Clock, Headphones, Eye, Clock3, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 const consultants = [
   {
@@ -36,8 +36,6 @@ const consultants = [
   },
 ];
 
-const timeSlots = ['09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:00 PM', '04:00 PM'];
-
 const statusConfig = {
   pending: { icon: Clock3, color: 'text-amber-600', bg: 'bg-amber-100', label: 'Pending' },
   confirmed: { icon: CheckCircle, color: 'text-blue-600', bg: 'bg-blue-100', label: 'Confirmed' },
@@ -54,14 +52,28 @@ export default function Consultation() {
   const [showBooking, setShowBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [myConsultations, setMyConsultations] = useState([]);
-  const [activeTab, setActiveTab] = useState('book'); // 'book' or 'my-consultations'
+  const [activeTab, setActiveTab] = useState('book');
   const [loading, setLoading] = useState(true);
+  // Admin-controlled availability
+  const [availableDates, setAvailableDates] = useState([]);
+  const [availableTimes, setAvailableTimes] = useState([]);
+  const [availabilityLoading, setAvailabilityLoading] = useState(true);
+  const [noAvailability, setNoAvailability] = useState(false);
 
   const API = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     fetchMyConsultations();
+    fetchAvailableDates();
   }, []);
+
+  useEffect(() => {
+    if (selectedDate) {
+      fetchAvailableTimes(selectedDate);
+    } else {
+      setAvailableTimes([]);
+    }
+  }, [selectedDate]);
 
   const fetchMyConsultations = async () => {
     try {
@@ -77,9 +89,42 @@ export default function Consultation() {
     }
   };
 
+  const fetchAvailableDates = async () => {
+    try {
+      const { data } = await axios.get(`${API}/api/availability/dates`);
+      setAvailableDates(data);
+      setNoAvailability(data.length === 0);
+    } catch (error) {
+      console.error('Error fetching available dates:', error);
+      setNoAvailability(true);
+    } finally {
+      setAvailabilityLoading(false);
+    }
+  };
+
+  const fetchAvailableTimes = async (date) => {
+    try {
+      const { data } = await axios.get(`${API}/api/availability/times/${date}`);
+      setAvailableTimes(data);
+    } catch (error) {
+      console.error('Error fetching available times:', error);
+      setAvailableTimes([]);
+    }
+  };
+
   const handleBook = async () => {
     try {
       const token = localStorage.getItem('token');
+
+      // First book the time slot
+      await axios.put(`${API}/api/availability/book`, {
+        date: selectedDate,
+        time: selectedTime
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Then create the consultation
       await axios.post(`${API}/api/consultation`, {
         consultantName: selectedConsultant.name,
         consultantImage: selectedConsultant.image,
@@ -91,8 +136,10 @@ export default function Consultation() {
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
       setBookingSuccess(true);
       fetchMyConsultations();
+      fetchAvailableDates(); // Refresh available dates
       setTimeout(() => {
         setBookingSuccess(false);
         setShowBooking(false);
@@ -103,12 +150,17 @@ export default function Consultation() {
         setActiveTab('my-consultations');
       }, 2000);
     } catch (error) {
-      alert('Error booking consultation');
+      alert(error.response?.data?.message || 'Error booking consultation');
     }
   };
 
   const formatCurrency = (amount) => {
-    return '₦' + (amount || 0).toLocaleString();
+    return 'N' + (amount || 0).toLocaleString();
+  };
+
+  // Check if a date is available (admin-selected)
+  const isDateAvailable = (dateStr) => {
+    return availableDates.some(d => d.date === dateStr);
   };
 
   if (bookingSuccess) {
@@ -167,77 +219,125 @@ export default function Consultation() {
       {activeTab === 'book' ? (
         showBooking ? (
           <div className="max-w-md mx-auto bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-6">Book Consultation with {selectedConsultant.name}</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                />
-              </div>
+            <h2 className="text-xl font-semibold mb-6">Book with {selectedConsultant.name}</h2>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Select Time</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {timeSlots.map((time) => (
-                    <button
-                      key={time}
-                      onClick={() => setSelectedTime(time)}
-                      className={`px-3 py-2 rounded-lg text-sm border transition-colors ${
-                        selectedTime === time
-                          ? 'bg-primary text-white border-primary'
-                          : 'border-gray-300 hover:border-primary'
-                      }`}
+            {availabilityLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : noAvailability ? (
+              <div className="text-center py-8">
+                <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-3" />
+                <h3 className="font-medium text-gray-900 mb-2">No Availability Set</h3>
+                <p className="text-gray-500 text-sm">Please check back later. Our consultants are setting up their schedules.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Date Selection - Admin Controlled */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Date <span className="text-gray-400">(Admin scheduled)</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <Calendar className="w-5 h-5 text-gray-400" />
+                    <select
+                      value={selectedDate}
+                      onChange={(e) => {
+                        setSelectedDate(e.target.value);
+                        setSelectedTime('');
+                      }}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                     >
-                      {time}
-                    </button>
-                  ))}
+                      <option value="">Choose a date...</option>
+                      {availableDates.map(d => (
+                        <option key={d._id} value={d.date}>
+                          {new Date(d.date).toLocaleDateString('en-NG', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Time Selection - Admin Controlled */}
+                {selectedDate && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Time <span className="text-gray-400">(Admin provided)</span>
+                    </label>
+                    {availableTimes.length === 0 ? (
+                      <p className="text-amber-600 text-sm py-3">No available times for this date. Please select another date.</p>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-2">
+                        {availableTimes.map((time) => (
+                          <button
+                            key={time}
+                            onClick={() => setSelectedTime(time)}
+                            className={`px-3 py-2 rounded-lg text-sm border transition-colors flex items-center justify-center gap-1 ${
+                              selectedTime === time
+                                ? 'bg-primary text-white border-primary'
+                                : 'border-gray-300 hover:border-primary text-gray-700'
+                            }`}
+                          >
+                            <Clock className="w-3 h-3" />
+                            {time}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Topic */}
+                {selectedTime && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Consultation Topic</label>
+                    <input
+                      type="text"
+                      value={topic}
+                      onChange={(e) => setTopic(e.target.value)}
+                      placeholder="e.g., Tax planning for my business"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                    />
+                  </div>
+                )}
+
+                {/* Fee Summary */}
+                {topic && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-gray-600">Consultation Fee</span>
+                      <span>{formatCurrency(selectedConsultant.price)}</span>
+                    </div>
+                    <div className="flex justify-between font-semibold">
+                      <span>Total</span>
+                      <span className="text-primary">{formatCurrency(selectedConsultant.price)}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Buttons */}
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setShowBooking(false)}
+                    className="flex-1 py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-50"
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={handleBook}
+                    disabled={!selectedDate || !selectedTime || !topic}
+                    className="flex-1 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark disabled:opacity-50"
+                  >
+                    Confirm Booking
+                  </button>
                 </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Consultation Topic</label>
-                <input
-                  type="text"
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  placeholder="e.g., Tax planning for my business"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                />
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-600">Consultation Fee</span>
-                  <span>{formatCurrency(selectedConsultant.price)}</span>
-                </div>
-                <div className="flex justify-between font-semibold">
-                  <span>Total</span>
-                  <span className="text-primary">{formatCurrency(selectedConsultant.price)}</span>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <button
-                  onClick={() => setShowBooking(false)}
-                  className="flex-1 py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-50"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={handleBook}
-                  disabled={!selectedDate || !selectedTime || !topic}
-                  className="flex-1 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark disabled:opacity-50"
-                >
-                  Confirm Booking
-                </button>
-              </div>
-            </div>
+            )}
           </div>
         ) : (
           <div className="grid md:grid-cols-3 gap-6">
@@ -304,9 +404,9 @@ export default function Consultation() {
                 const statusColor = statusConfig[consultation.status]?.color || 'text-gray-600';
                 const statusBg = statusConfig[consultation.status]?.bg || 'bg-gray-100';
                 const statusLabel = statusConfig[consultation.status]?.label || consultation.status;
-                
+
                 return (
-                  <div 
+                  <div
                     key={consultation._id}
                     onClick={() => navigate(`/consultation/${consultation._id}`)}
                     className="p-6 hover:bg-gray-50 cursor-pointer transition-colors"
@@ -365,7 +465,7 @@ export default function Consultation() {
                         </button>
                       </div>
                     </div>
-                    
+
                     {/* Admin Notes Preview */}
                     {consultation.notes && (
                       <div className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-100">
