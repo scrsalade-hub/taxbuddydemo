@@ -16,8 +16,6 @@ const statusIcons = {
   cancelled: XCircle,
 };
 
-const API = import.meta.env.VITE_API_URL;
-
 export default function Consultations() {
   const [consultations, setConsultations] = useState([]);
   const [stats, setStats] = useState({ total: 0, pending: 0, completed: 0, revenue: 0 });
@@ -30,6 +28,8 @@ export default function Consultations() {
   const [newStatus, setNewStatus] = useState('');
   const [statusNotes, setStatusNotes] = useState('');
   const [updating, setUpdating] = useState(false);
+
+  const API = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     fetchConsultations();

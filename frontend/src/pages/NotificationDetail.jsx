@@ -37,13 +37,13 @@ const typeLabels = {
   important: 'Important',
 };
 
-const API = import.meta.env.VITE_API_URL;
-
 export default function NotificationDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [notification, setNotification] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const API = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     fetchNotification();

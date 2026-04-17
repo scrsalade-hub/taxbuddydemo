@@ -12,7 +12,7 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const API  = import.meta.env.VITE_API_URL;
+  const API = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchData = async () => {

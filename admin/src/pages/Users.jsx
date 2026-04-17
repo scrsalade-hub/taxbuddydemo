@@ -16,11 +16,11 @@ export default function Users() {
   const [notificationType, setNotificationType] = useState('info');
   const [sendingNotification, setSendingNotification] = useState(false);
 
+  const API = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     fetchUsers();
   }, []);
-
-  const API = import.meta.env.VITE_API_URL;
 
   const fetchUsers = async () => {
     try {

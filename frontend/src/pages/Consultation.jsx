@@ -57,7 +57,7 @@ export default function Consultation() {
   const [activeTab, setActiveTab] = useState('book'); // 'book' or 'my-consultations'
   const [loading, setLoading] = useState(true);
 
-  const API = import.meta.env.VITE_API_URL; 
+  const API = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     fetchMyConsultations();

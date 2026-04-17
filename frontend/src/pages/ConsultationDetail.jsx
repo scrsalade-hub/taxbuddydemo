@@ -55,11 +55,11 @@ const statusConfig = {
   },
 };
 
-const API = import.meta.env.VITE_API_URL;
-
 export default function ConsultationDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  
+  const API = import.meta.env.VITE_API_URL;
   const [consultation, setConsultation] = useState(null);
   const [loading, setLoading] = useState(true);
 

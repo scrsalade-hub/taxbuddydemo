@@ -11,7 +11,7 @@ export default function Landing() {
           <img 
             src={assets.logo} 
             alt="TaxBuddy" 
-            className=" object-contain bg-white rounded p-2"
+            className="object-contain bg-white rounded p-2"
           />
         </div>
         <div className="flex gap-4">

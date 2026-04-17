@@ -14,7 +14,7 @@ export default function Referral() {
   const [copied, setCopied] = useState(false);
 
   const referralCode = `TB-${user?.id?.slice(0, 6).toUpperCase() || 'REF123'}`;
-  const referralLink = `https://taxbuddy-three.vercel.app/register?ref=${referralCode}`;
+  const referralLink = `https://taxbuddy.ng/register?ref=${referralCode}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);

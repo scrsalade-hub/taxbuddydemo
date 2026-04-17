@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { Download, FileText, CheckCircle2, XCircle, Search, Calendar, FileSpreadsheet, Eye } from 'lucide-react';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { generateTaxReceiptPDF, generateAllRecordsPDF } from '../utils/pdfGenerator';
 
 const statusColors = {
   paid: 'bg-green-100 text-green-700',
@@ -18,6 +18,7 @@ const months = [
 
 export default function TaxHistory() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [records, setRecords] = useState([]);
   const [filteredRecords, setFilteredRecords] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -95,40 +96,7 @@ export default function TaxHistory() {
   const availableYears = [...new Set(records.map(r => r.year))].sort((a, b) => b - a);
 
   const downloadPDF = (record) => {
-    const doc = new jsPDF();
-    
-    doc.setFillColor(12, 138, 90);
-    doc.rect(0, 0, 210, 40, 'F');
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
-    doc.setFont('helvetica', 'bold');
-    doc.text('TaxBuddy', 20, 25);
-    
-    doc.setFontSize(12);
-    doc.text('Tax Payment Receipt', 20, 35);
-    
-    doc.setTextColor(30, 41, 59);
-    doc.setFontSize(16);
-    doc.text('Tax Payment Details', 20, 60);
-    
-    const details = [
-      `Period: ${record.month} ${record.year}`,
-      `Tax Type: ${record.taxType}`,
-      `Income: ₦${record.income.toLocaleString()}`,
-      `Taxable Income: ₦${record.taxableIncome.toLocaleString()}`,
-      `Tax Amount: ₦${record.taxAmount.toLocaleString()}`,
-      `Tax Rate: ${record.taxRate}%`,
-      `Status: ${record.status.toUpperCase()}`,
-    ];
-    
-    let y = 80;
-    details.forEach(detail => {
-      doc.setFontSize(11);
-      doc.text(detail, 20, y);
-      y += 10;
-    });
-    
+    const doc = generateTaxReceiptPDF(record, user);
     doc.save(`Tax-Receipt-${record.month}-${record.year}.pdf`);
   };
 
@@ -137,48 +105,7 @@ export default function TaxHistory() {
       alert('No records to download');
       return;
     }
-
-    const doc = new jsPDF();
-    
-    doc.setFillColor(12, 138, 90);
-    doc.rect(0, 0, 210, 40, 'F');
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
-    doc.setFont('helvetica', 'bold');
-    doc.text('TaxBuddy', 20, 25);
-    
-    doc.setFontSize(12);
-    doc.text('Tax Records Summary', 20, 35);
-    
-    doc.setTextColor(30, 41, 59);
-    doc.setFontSize(11);
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 50);
-    doc.text(`Total Records: ${filteredRecords.length}`, 20, 58);
-
-    const tableData = filteredRecords.map(r => [
-      `${r.month} ${r.year}`,
-      r.taxType,
-      `₦${r.income.toLocaleString()}`,
-      `₦${r.taxAmount.toLocaleString()}`,
-      `${r.taxRate}%`,
-      r.status.toUpperCase()
-    ]);
-
-    autoTable(doc,{
-      startY: 70,
-      head: [['Period', 'Type', 'Income', 'Tax Amount', 'Rate', 'Status']],
-      body: tableData,
-      theme: 'striped',
-      headStyles: { fillColor: [12, 138, 90] },
-    });
-
-    const totalTax = filteredRecords.reduce((sum, r) => sum + r.taxAmount, 0);
-    const finalY = doc.lastAutoTable.finalY + 10;
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Total Tax: ₦${totalTax.toLocaleString()}`, 20, finalY);
-
+    const doc = generateAllRecordsPDF(filteredRecords, user);
     doc.save(`Tax-Records-${new Date().toISOString().split('T')[0]}.pdf`);
   };
 

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Users, Calculator, Calendar, TrendingUp, DollarSign, FileText } from 'lucide-react';
 import axios from 'axios';
 
-
 export default function Dashboard() {
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -12,6 +11,7 @@ export default function Dashboard() {
   });
   const [recentUsers, setRecentUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const API = import.meta.env.VITE_API_URL;
 
   useEffect(() => {

@@ -19,12 +19,13 @@ const typeColors = {
   important: 'bg-purple-100 text-purple-700 border-purple-300',
 };
 
-const API = import.meta.env.VITE_API_URL;
 export default function Notifications() {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+
+  const API = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     fetchNotifications();
