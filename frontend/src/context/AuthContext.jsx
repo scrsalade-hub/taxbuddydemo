@@ -46,6 +46,22 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
   };
 
+  const updateUser = async (updateData) => {
+    try {
+      const token = localStorage.getItem('token');
+      const { data } = await axios.put(`${API}/api/users/profile`, updateData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Merge with existing user data to preserve token and other fields
+      const updatedUser = { ...user, ...data };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      return { success: true };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Update failed' };
+    }
+  };
+
   // Axios interceptor for token
   axios.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
@@ -56,7 +72,7 @@ export const AuthProvider = ({ children }) => {
   });
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

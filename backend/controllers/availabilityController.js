@@ -4,17 +4,21 @@ import Availability from '../models/Availability.js';
 // @route   POST /api/admin/availability
 export const setAvailability = async (req, res) => {
   try {
-    const { date, timeSlots } = req.body;
+    const { date, timeSlots, consultantId } = req.body;
 
     if (!date || !timeSlots || !Array.isArray(timeSlots) || timeSlots.length === 0) {
       return res.status(400).json({ message: 'Please provide date and at least one time slot' });
     }
 
+    if (!consultantId) {
+      return res.status(400).json({ message: 'Please provide consultantId' });
+    }
+
     const dateObj = new Date(date);
     const dateString = dateObj.toISOString().split('T')[0];
 
-    // Check if availability already exists for this date
-    let availability = await Availability.findOne({ dateString });
+    // Check if availability already exists for this date and consultant
+    let availability = await Availability.findOne({ dateString, consultantId });
 
     if (availability) {
       // Update existing
@@ -29,6 +33,7 @@ export const setAvailability = async (req, res) => {
       availability = await Availability.create({
         date: dateObj,
         dateString,
+        consultantId,
         timeSlots: timeSlots.map(time => ({
           time,
           isBooked: false
@@ -54,10 +59,17 @@ export const getAllAvailability = async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const availabilities = await Availability.find({
+    const { consultantId } = req.query;
+    const query = {
       date: { $gte: today },
       isActive: true
-    }).sort({ date: 1 });
+    };
+
+    if (consultantId) {
+      query.consultantId = consultantId;
+    }
+
+    const availabilities = await Availability.find(query).sort({ date: 1 });
 
     res.json(availabilities);
   } catch (error) {
@@ -92,16 +104,24 @@ export const getAvailableDates = async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const availabilities = await Availability.find({
+    const { consultantId } = req.query;
+    const query = {
       date: { $gte: today },
       isActive: true
-    }).sort({ date: 1 });
+    };
+
+    if (consultantId) {
+      query.consultantId = consultantId;
+    }
+
+    const availabilities = await Availability.find(query).sort({ date: 1 });
 
     // Format dates for frontend
     const dates = availabilities.map(a => ({
       _id: a._id,
       date: a.dateString,
       dateObj: a.date,
+      consultantId: a.consultantId,
       hasAvailableSlots: a.timeSlots.some(s => !s.isBooked)
     }));
 
@@ -117,11 +137,18 @@ export const getAvailableDates = async (req, res) => {
 export const getAvailableTimes = async (req, res) => {
   try {
     const { date } = req.params;
+    const { consultantId } = req.query;
 
-    const availability = await Availability.findOne({
+    const query = {
       dateString: date,
       isActive: true
-    });
+    };
+
+    if (consultantId) {
+      query.consultantId = consultantId;
+    }
+
+    const availability = await Availability.findOne(query);
 
     if (!availability) {
       return res.json([]);
@@ -143,12 +170,18 @@ export const getAvailableTimes = async (req, res) => {
 // @route   PUT /api/admin/availability/book
 export const bookTimeSlot = async (req, res) => {
   try {
-    const { date, time } = req.body;
+    const { date, time, consultantId } = req.body;
 
-    const availability = await Availability.findOne({
+    const query = {
       dateString: date,
       isActive: true
-    });
+    };
+
+    if (consultantId) {
+      query.consultantId = consultantId;
+    }
+
+    const availability = await Availability.findOne(query);
 
     if (!availability) {
       return res.status(404).json({ message: 'Date not available' });

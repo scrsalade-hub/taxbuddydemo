@@ -9,7 +9,10 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [records, setRecords] = useState([]);
+  const [allRecords, setAllRecords] = useState([]);
   const [chartData, setChartData] = useState([]);
+  const [selectedYear, setSelectedYear] = useState('all');
+  const [availableYears, setAvailableYears] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const API = import.meta.env.VITE_API_URL;
@@ -24,10 +27,15 @@ export default function Dashboard() {
           axios.get(`${API}/api/tax/records`, { headers }),
         ]);
         setStats(statsRes.data);
+        setAllRecords(recordsRes.data);
         setRecords(recordsRes.data.slice(0, 5));
-        
+
+        // Extract unique years from records
+        const years = [...new Set(recordsRes.data.map(r => r.year))].sort((a, b) => b - a);
+        setAvailableYears(years);
+
         // Generate chart data from real records
-        const monthlyData = generateChartData(recordsRes.data);
+        const monthlyData = generateChartData(recordsRes.data, 'all');
         setChartData(monthlyData);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -38,20 +46,38 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
-  // Generate chart data from user's tax records
-  const generateChartData = (records) => {
+  // Regenerate chart data when year filter changes
+  useEffect(() => {
+    if (allRecords.length > 0) {
+      const monthlyData = generateChartData(allRecords, selectedYear);
+      setChartData(monthlyData);
+    }
+  }, [selectedYear, allRecords]);
+
+  // Generate chart data from user's tax records, filtered by year
+  const generateChartData = (records, yearFilter) => {
     if (!records || records.length === 0) {
       // Return empty months if no records
       return monthNames.map(month => ({ month, income: 0 }));
     }
 
-    // Group records by month and sum income
+    // Filter records by year if a specific year is selected
+    let filteredRecords = records;
+    if (yearFilter !== 'all') {
+      filteredRecords = records.filter(r => r.year === parseInt(yearFilter));
+    }
+
+    if (filteredRecords.length === 0) {
+      return monthNames.map(month => ({ month, income: 0 }));
+    }
+
+    // Group records by month using the record's month field
     const monthlyIncome = {};
-    
-    records.forEach(record => {
-      const date = new Date(record.createdAt);
-      const monthKey = monthNames[date.getMonth()];
-      
+
+    filteredRecords.forEach(record => {
+      const monthIndex = monthNames.indexOf(record.month);
+      const monthKey = monthIndex >= 0 ? monthNames[monthIndex] : record.month;
+
       if (!monthlyIncome[monthKey]) {
         monthlyIncome[monthKey] = 0;
       }
@@ -126,9 +152,15 @@ export default function Dashboard() {
         <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold">Income Overview</h3>
-            <select className="text-sm border border-gray-200 rounded-lg px-3 py-1.5">
-              <option>This Year</option>
-              <option>Last Year</option>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="text-sm border border-gray-200 rounded-lg px-3 py-1.5"
+            >
+              <option value="all">All Years</option>
+              {availableYears.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
             </select>
           </div>
           <div className="h-[300px]">

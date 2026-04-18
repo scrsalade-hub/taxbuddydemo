@@ -7,9 +7,16 @@ const defaultTimeSlots = [
   '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM'
 ];
 
+const consultants = [
+  { id: '1', name: 'Dr. Sarah Adeyemi' },
+  { id: '2', name: 'Mr. Chukwuemeka Okafor' },
+  { id: '3', name: 'Mrs. Fatima Ibrahim' },
+];
+
 export default function Availability() {
   const [availabilities, setAvailabilities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedConsultant, setSelectedConsultant] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTimes, setSelectedTimes] = useState([]);
   const [customTime, setCustomTime] = useState('');
@@ -20,12 +27,15 @@ export default function Availability() {
 
   useEffect(() => {
     fetchAvailabilities();
-  }, []);
+  }, [selectedConsultant]);
 
   const fetchAvailabilities = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const { data } = await axios.get(`${API}/api/availability/all`, {
+      const url = selectedConsultant
+        ? `${API}/api/availability/all?consultantId=${selectedConsultant}`
+        : `${API}/api/availability/all`;
+      const { data } = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setAvailabilities(data);
@@ -52,6 +62,10 @@ export default function Availability() {
   };
 
   const saveAvailability = async () => {
+    if (!selectedConsultant) {
+      setMessage('Please select a consultant');
+      return;
+    }
     if (!selectedDate || selectedTimes.length === 0) {
       setMessage('Please select a date and at least one time slot');
       return;
@@ -62,7 +76,8 @@ export default function Availability() {
       const token = localStorage.getItem('adminToken');
       await axios.post(`${API}/api/availability`, {
         date: selectedDate,
-        timeSlots: selectedTimes
+        timeSlots: selectedTimes,
+        consultantId: selectedConsultant
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -73,7 +88,7 @@ export default function Availability() {
       fetchAvailabilities();
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
-      setMessage('Error saving availability');
+      setMessage(error.response?.data?.message || 'Error saving availability');
     } finally {
       setSaving(false);
     }
@@ -127,6 +142,25 @@ export default function Availability() {
           <Plus className="w-5 h-5 text-primary" />
           Add New Availability
         </h2>
+
+        {/* Consultant Selection */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Select Consultant</label>
+          <select
+            value={selectedConsultant}
+            onChange={(e) => {
+              setSelectedConsultant(e.target.value);
+              setSelectedDate('');
+              setSelectedTimes([]);
+            }}
+            className="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+          >
+            <option value="">-- Choose a consultant --</option>
+            {consultants.map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </div>
 
         {/* Date Selection */}
         <div className="mb-6">
@@ -230,7 +264,19 @@ export default function Availability() {
 
       {/* Current Availabilities */}
       <div className="bg-white rounded-xl shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Current Availabilities</h2>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Current Availabilities</h2>
+          <select
+            value={selectedConsultant}
+            onChange={(e) => setSelectedConsultant(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm"
+          >
+            <option value="">All Consultants</option>
+            {consultants.map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </div>
 
         {availabilities.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
@@ -246,6 +292,9 @@ export default function Availability() {
               >
                 <div>
                   <p className="font-medium text-gray-900">{formatDate(avail.date)}</p>
+                  <p className="text-sm text-primary mb-2">
+                    {consultants.find(c => c.id === avail.consultantId)?.name || 'Unknown Consultant'}
+                  </p>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {avail.timeSlots.map((slot, idx) => (
                       <span

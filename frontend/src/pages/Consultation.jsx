@@ -64,16 +64,21 @@ export default function Consultation() {
 
   useEffect(() => {
     fetchMyConsultations();
-    fetchAvailableDates();
   }, []);
 
   useEffect(() => {
-    if (selectedDate) {
-      fetchAvailableTimes(selectedDate);
+    if (selectedConsultant) {
+      fetchAvailableDates(selectedConsultant.id);
+    }
+  }, [selectedConsultant]);
+
+  useEffect(() => {
+    if (selectedDate && selectedConsultant) {
+      fetchAvailableTimes(selectedDate, selectedConsultant.id);
     } else {
       setAvailableTimes([]);
     }
-  }, [selectedDate]);
+  }, [selectedDate, selectedConsultant]);
 
   const fetchMyConsultations = async () => {
     try {
@@ -89,9 +94,10 @@ export default function Consultation() {
     }
   };
 
-  const fetchAvailableDates = async () => {
+  const fetchAvailableDates = async (consultantId) => {
     try {
-      const { data } = await axios.get(`${API}/api/availability/dates`);
+      setAvailabilityLoading(true);
+      const { data } = await axios.get(`${API}/api/availability/dates?consultantId=${consultantId}`);
       setAvailableDates(data);
       setNoAvailability(data.length === 0);
     } catch (error) {
@@ -102,9 +108,9 @@ export default function Consultation() {
     }
   };
 
-  const fetchAvailableTimes = async (date) => {
+  const fetchAvailableTimes = async (date, consultantId) => {
     try {
-      const { data } = await axios.get(`${API}/api/availability/times/${date}`);
+      const { data } = await axios.get(`${API}/api/availability/times/${date}?consultantId=${consultantId}`);
       setAvailableTimes(data);
     } catch (error) {
       console.error('Error fetching available times:', error);
@@ -119,7 +125,8 @@ export default function Consultation() {
       // First book the time slot
       await axios.put(`${API}/api/availability/book`, {
         date: selectedDate,
-        time: selectedTime
+        time: selectedTime,
+        consultantId: selectedConsultant.id
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -139,7 +146,7 @@ export default function Consultation() {
 
       setBookingSuccess(true);
       fetchMyConsultations();
-      fetchAvailableDates(); // Refresh available dates
+      fetchAvailableDates(selectedConsultant.id); // Refresh available dates
       setTimeout(() => {
         setBookingSuccess(false);
         setShowBooking(false);
@@ -233,10 +240,10 @@ export default function Consultation() {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Date Selection - Admin Controlled */}
+                {/* Date Selection - Consultant Specific */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Date <span className="text-gray-400">(Admin scheduled)</span>
+                    Select Date <span className="text-gray-400">({selectedConsultant.name}'s schedule)</span>
                   </label>
                   <div className="flex items-center gap-3">
                     <Calendar className="w-5 h-5 text-gray-400" />
@@ -263,11 +270,11 @@ export default function Consultation() {
                   </div>
                 </div>
 
-                {/* Time Selection - Admin Controlled */}
+                {/* Time Selection - Consultant Specific */}
                 {selectedDate && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Time <span className="text-gray-400">(Admin provided)</span>
+                      Select Time <span className="text-gray-400">({selectedConsultant.name}'s times)</span>
                     </label>
                     {availableTimes.length === 0 ? (
                       <p className="text-amber-600 text-sm py-3">No available times for this date. Please select another date.</p>

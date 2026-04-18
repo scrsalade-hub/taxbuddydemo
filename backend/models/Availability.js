@@ -14,6 +14,10 @@ const availabilitySchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  consultantId: {
+    type: String,
+    required: true,
+  },
   timeSlots: [timeSlotSchema],
   isActive: {
     type: Boolean,

@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { User, Mail, Phone, Building2, Camera, Save, Bell, Shield } from 'lucide-react';
 
 export default function Profile() {
   const { user, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
@@ -13,14 +14,33 @@ export default function Profile() {
     taxId: user?.taxId || '',
   });
 
+  // Sync form data when user data changes
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        phone: user.phone || '',
+        businessName: user.businessName || '',
+        taxId: user.taxId || '',
+      });
+    }
+  }, [user]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSave = async () => {
-    // In a real app, you would call updateUser here
-    setIsEditing(false);
-    alert('Profile updated successfully!');
+    setSaving(true);
+    const result = await updateUser(formData);
+    setSaving(false);
+    if (result.success) {
+      setIsEditing(false);
+      alert('Profile updated successfully!');
+    } else {
+      alert(result.message || 'Failed to update profile');
+    }
   };
 
   return (
@@ -38,14 +58,15 @@ export default function Profile() {
             <h2 className="text-lg font-semibold">Personal Information</h2>
             <button
               onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+              disabled={saving}
               className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 ${
                 isEditing 
-                  ? 'bg-primary text-white hover:bg-primary-dark' 
+                  ? 'bg-primary text-white hover:bg-primary-dark disabled:opacity-50' 
                   : 'border border-gray-300 hover:bg-gray-50'
               }`}
             >
               <Save className="w-4 h-4" />
-              {isEditing ? 'Save Changes' : 'Edit Profile'}
+              {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Edit Profile'}
             </button>
           </div>
 
