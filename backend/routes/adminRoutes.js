@@ -12,7 +12,10 @@ import {
   deleteConsultation,
   getConsultationStats,
   sendNotificationToUser,
-  sendNotificationToAllUsers
+  sendNotificationToAllUsers,
+  sendEmailToUser,
+  sendEmailToAllUsers,
+  getUsersForEmail
 } from '../controllers/adminController.js';
 
 const router = express.Router();
@@ -34,5 +37,10 @@ router.delete('/consultations/:id', deleteConsultation);
 // Notification routes
 router.post('/notifications/send', sendNotificationToUser);
 router.post('/notifications/send-all', sendNotificationToAllUsers);
+
+// Email routes
+router.get('/emails/users', getUsersForEmail);
+router.post('/emails/send', sendEmailToUser);
+router.post('/emails/send-all', sendEmailToAllUsers);
 
 export default router;

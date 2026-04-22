@@ -15,6 +15,7 @@ import {
   Bell
 } from 'lucide-react';
 import { useState } from 'react';
+import ChatBot from './ChatBot';
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
@@ -218,6 +219,9 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Floating ChatBot */}
+      <ChatBot />
     </div>
   );
 }

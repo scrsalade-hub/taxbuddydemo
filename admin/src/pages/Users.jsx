@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Filter, MoreVertical, UserCheck, UserX, Mail, Send } from 'lucide-react';
+import { Search, Filter, MoreVertical, UserCheck, UserX, Mail, Send, AtSign } from 'lucide-react';
 import axios from 'axios';
 
 export default function Users() {
@@ -15,6 +15,12 @@ export default function Users() {
   const [notificationMessage, setNotificationMessage] = useState('');
   const [notificationType, setNotificationType] = useState('info');
   const [sendingNotification, setSendingNotification] = useState(false);
+
+  // Email modal state
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailHtml, setEmailHtml] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const API = import.meta.env.VITE_API_URL;
 
@@ -82,6 +88,35 @@ export default function Users() {
       alert('Error sending notification');
     } finally {
       setSendingNotification(false);
+    }
+  };
+
+  const openEmailModal = (user) => {
+    setSelectedUser(user);
+    setEmailSubject('');
+    setEmailHtml(`<p>Hi ${user.firstName || 'there'},</p><p></p>`);
+    setShowEmailModal(true);
+  };
+
+  const sendEmailToUser = async () => {
+    if (!emailSubject.trim() || !emailHtml.trim()) {
+      alert('Please fill in subject and message');
+      return;
+    }
+    setSendingEmail(true);
+    try {
+      const token = localStorage.getItem('adminToken');
+      await axios.post(`${API}/api/admin/emails/send`, {
+        userId: selectedUser._id,
+        subject: emailSubject,
+        html: emailHtml,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      alert('Email sent successfully!');
+      setShowEmailModal(false);
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to send email');
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -296,9 +331,16 @@ export default function Users() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <button
+                          onClick={() => openEmailModal(user)}
+                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg"
+                          title="Send Email"
+                        >
+                          <AtSign className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => openNotificationModal(user)}
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
-                          title="Send Notification"
+                          title="Send In-App Notification"
                         >
                           <Send className="w-4 h-4" />
                         </button>
@@ -320,6 +362,43 @@ export default function Users() {
           </table>
         </div>
       </div>
+
+      {/* Send Email Modal */}
+      {showEmailModal && selectedUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl w-full max-w-lg p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-1">Send Email</h2>
+            <p className="text-sm text-gray-500 mb-4">To: {selectedUser.firstName} {selectedUser.lastName} ({selectedUser.email})</p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                <input type="text" value={emailSubject} onChange={e => setEmailSubject(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Email subject" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Message (HTML)</label>
+                <textarea value={emailHtml} onChange={e => setEmailHtml(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                  rows="6" placeholder="<p>Hi {{firstName}},</p>..." />
+                <p className="text-xs text-gray-400 mt-1">Placeholders: {'{{firstName}}'} {'{{lastName}}'} {'{{email}}'}</p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setShowEmailModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                Cancel
+              </button>
+              <button onClick={sendEmailToUser} disabled={sendingEmail}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                {sendingEmail ? 'Sending...' : <><Mail className="w-4 h-4" /> Send Email</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Notification Modal */}
       {showNotificationModal && (

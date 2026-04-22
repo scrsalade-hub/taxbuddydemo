@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
+import { sendWelcomeEmail } from '../services/emailService.js';
 
 // Generate JWT
 const generateToken = (id) => {
@@ -41,6 +42,14 @@ export const registerUser = async (req, res) => {
       message: 'Your account has been created successfully. Start managing your taxes today!',
       type: 'success',
     });
+
+    // Send welcome email (always send, regardless of emailNotifications setting)
+    try {
+      await sendWelcomeEmail(user);
+    } catch (emailError) {
+      console.error('Welcome email failed:', emailError);
+      // Don't fail registration if email fails
+    }
 
     res.status(201).json({
       _id: user._id,
@@ -114,6 +123,11 @@ export const updateUserProfile = async (req, res) => {
       user.phone = req.body.phone || user.phone;
       user.businessName = req.body.businessName || user.businessName;
       user.taxId = req.body.taxId || user.taxId;
+      
+      // Allow toggling email notifications preference
+      if (req.body.emailNotifications !== undefined) {
+        user.emailNotifications = req.body.emailNotifications;
+      }
       
       if (req.body.password) {
         user.password = req.body.password;

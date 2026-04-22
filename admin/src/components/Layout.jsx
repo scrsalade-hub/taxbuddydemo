@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Calendar, Clock, LogOut, Menu } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, Clock, Mail, LogOut, Menu } from 'lucide-react';
 import { useState } from 'react';
 
 const sidebarItems = [
@@ -7,6 +7,7 @@ const sidebarItems = [
   { icon: Users, label: 'Users', path: '/users' },
   { icon: Calendar, label: 'Consultations', path: '/consultations' },
   { icon: Clock, label: 'Availability', path: '/availability' },
+  { icon: Mail, label: 'Emails', path: '/emails' },
 ];
 
 export default function Layout({ setAdmin }) {

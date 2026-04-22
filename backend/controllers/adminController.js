@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import TaxRecord from '../models/TaxRecord.js';
 import Consultation from '../models/Consultation.js';
 import Notification from '../models/Notification.js';
+import { sendEmail, sendBulkEmail } from '../services/emailService.js';
 
 // @desc    Admin login
 // @route   POST /api/admin/login
@@ -276,6 +277,136 @@ export const getConsultationStats = async (req, res) => {
     });
   } catch (error) {
     console.error('Stats error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Send email to a specific user
+// @route   POST /api/admin/emails/send
+export const sendEmailToUser = async (req, res) => {
+  try {
+    const { userId, subject, html } = req.body;
+
+    if (!userId || !subject || !html) {
+      return res.status(400).json({ message: 'userId, subject, and html are required' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Send email regardless of notification preference (admin override)
+    const result = await sendEmail(user.email, subject, html);
+
+    if (!result.success) {
+      return res.status(500).json({ message: 'Failed to send email', error: result.error });
+    }
+
+    res.json({ message: 'Email sent successfully', recipient: user.email });
+  } catch (error) {
+    console.error('Send email error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Send email to all users or filtered group
+// @route   POST /api/admin/emails/send-all
+export const sendEmailToAllUsers = async (req, res) => {
+  try {
+    const { subject, html, filter } = req.body;
+
+    if (!subject || !html) {
+      return res.status(400).json({ message: 'subject and html are required' });
+    }
+
+    let userQuery = {};
+
+    // Apply email notification filter if provided
+    if (filter?.emailNotifications !== undefined) {
+      userQuery.emailNotifications = filter.emailNotifications === true || filter.emailNotifications === 'true';
+    }
+
+    // Apply account type filter
+    if (filter?.accountType) {
+      userQuery.accountType = filter.accountType;
+    }
+
+    // Apply subscription filter
+    if (filter?.subscription) {
+      userQuery.subscription = filter.subscription;
+    }
+
+    // Apply specific userIds (group send)
+    if (filter?.userIds && Array.isArray(filter.userIds) && filter.userIds.length > 0) {
+      userQuery._id = { $in: filter.userIds };
+    }
+
+    const users = await User.find(userQuery).select('email firstName lastName');
+
+    if (users.length === 0) {
+      return res.status(200).json({
+        message: 'No users match the filter criteria',
+        count: 0,
+      });
+    }
+
+    // Send emails
+    const results = await sendBulkEmail(users, subject, html);
+
+    res.json({
+      message: `Email sent to ${results.success} users (${results.failed} failed)`,
+      sent: results.success,
+      failed: results.failed,
+      total: users.length,
+      errors: results.failed > 0 ? results.errors : undefined,
+    });
+  } catch (error) {
+    console.error('Send bulk email error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get users for email sending with notification filter
+// @route   GET /api/admin/emails/users
+export const getUsersForEmail = async (req, res) => {
+  try {
+    const { emailNotifications, accountType, subscription } = req.query;
+
+    let query = {};
+
+    if (emailNotifications !== undefined) {
+      query.emailNotifications = emailNotifications === 'true';
+    }
+
+    if (accountType) {
+      query.accountType = accountType;
+    }
+
+    if (subscription) {
+      query.subscription = subscription;
+    }
+
+    const users = await User.find(query)
+      .select('_id firstName lastName email emailNotifications accountType subscription createdAt')
+      .sort({ createdAt: -1 });
+
+    // Count stats
+    const totalUsers = await User.countDocuments();
+    const subscribedCount = await User.countDocuments({ emailNotifications: true });
+    const unsubscribedCount = await User.countDocuments({ emailNotifications: false });
+
+    res.json({
+      users,
+      count: users.length,
+      stats: {
+        totalUsers,
+        subscribedCount,
+        unsubscribedCount,
+      },
+    });
+  } catch (error) {
+    console.error('Get users for email error:', error);
     res.status(500).json({ message: error.message });
   }
 };

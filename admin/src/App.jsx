@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Consultations from './pages/Consultations';
 import Availability from './pages/Availability';
+import Emails from './pages/Emails';
 import Layout from './components/Layout';
 
 function App() {
@@ -45,6 +46,7 @@ function App() {
         <Route path="/users" element={<Users />} />
         <Route path="/consultations" element={<Consultations />} />
         <Route path="/availability" element={<Availability />} />
+        <Route path="/emails" element={<Emails />} />
       </Route>
     </Routes>
   );
