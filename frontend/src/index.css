@@ -1,55 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Rubik', sans-serif;
+    background-color: #f8fafc;
+    color: #1e293b;
+    overflow-x: hidden;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
 }
 
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: #f8fafc;
-  color: #1e293b;
+@layer components {
+  /* Landing Page Custom Utilities */
+  .padding {
+    @apply px-8 md:px-14 lg:px-20;
+  }
+  .text-heading {
+    @apply text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-[400] leading-[120%];
+  }
+  .text-body {
+    @apply text-[0.875rem] leading-[120%] font-[400];
+  }
+  .btn-primary {
+    @apply bg-btn-color text-white px-10 py-3 text-[14px] font-[400] border border-transparent hover:scale-[0.95] transition-all;
+  }
+  .text-primary {
+    @apply text-[#38B88F];
+  }
+  .bg-primary {
+    @apply bg-[#38B88F];
+  }
+  .bg-bg-color {
+    @apply bg-[#F8FFF8];
+  }
+  .bg-border-color {
+    @apply bg-[#40E0D0];
+  }
+  .border-color {
+    @apply border-[#40E0D0];
+  }
+  .bg-heading-color {
+    @apply bg-[#038C2A];
+  }
+  .text-heading-color {
+    @apply text-[#038C2A];
+  }
+  .active {
+    @apply text-[#38B88F];
+  }
+
+  /* Existing TaxBuddy Utilities */
+  .card-hover {
+    transition: all 0.3s ease;
+  }
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+  }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+@layer utilities {
+  .scrollbar-hide {
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
-}
-
-/* Card hover effect */
-.card-hover {
-  transition: all 0.3s ease;
-}
-
-.card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
 }

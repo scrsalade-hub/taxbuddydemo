@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }) => {
       setUser(data);
       localStorage.setItem('user', JSON.stringify(data));
       localStorage.setItem('token', data.token);
-      return { success: true };
+      return { success: true, data };
     } catch (error) {
       return { success: false, message: error.response?.data?.message || 'Registration failed' };
     }
@@ -62,6 +62,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const { data } = await axios.get(`${API}/api/users/profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const updatedUser = { ...user, ...data, token: localStorage.getItem('token') };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      return { success: true };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Refresh failed' };
+    }
+  };
+
   // Axios interceptor for token
   axios.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
@@ -72,7 +87,7 @@ export const AuthProvider = ({ children }) => {
   });
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, updateUser, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateUser, refreshUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

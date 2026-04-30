@@ -1,7 +1,7 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
-import Landing from './pages/Landing';
+import LandingApp from './LandingApp';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -15,9 +15,18 @@ import Subscription from './pages/Subscription';
 import Referral from './pages/Referral';
 import Notifications from './pages/Notifications';
 import NotificationDetail from './pages/NotificationDetail';
+import VerifyEmail from './pages/VerifyEmail';
+import ForgotPassword from './pages/ForgotPassword';
+import VerifyResetCode from './pages/VerifyResetCode';
+import ResetPassword from './pages/ResetPassword';
 
 function App() {
   const { user, loading } = useAuth();
+  const location = useLocation();
+
+  // Define landing page paths
+  const landingPaths = ['/', '/about', '/services', '/resources', '/contact'];
+  const isLandingPage = landingPaths.includes(location.pathname);
 
   if (loading) {
     return (
@@ -27,12 +36,25 @@ function App() {
     );
   }
 
+  // If user is logged in and tries to access landing pages, redirect to dashboard
+  if (user && isLandingPage) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return (
     <Routes>
-      <Route path="/" element={<Landing />} />
+      {/* Landing Pages - Public */}
+      <Route path="/*" element={!user ? <LandingApp /> : <Navigate to="/dashboard" />} />
+
+      {/* Auth Pages */}
       <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
       <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard" />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/verify-reset-code" element={<VerifyResetCode />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       
+      {/* Protected App Routes */}
       <Route element={user ? <Layout /> : <Navigate to="/login" />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/calculator" element={<TaxCalculator />} />

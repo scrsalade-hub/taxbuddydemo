@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { User, Mail, Phone, Building2, Camera, Save, Bell, Shield } from 'lucide-react';
+import { User, Mail, Phone, Building2, Camera, Save, Bell, Shield, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import axios from 'axios';
+
+const API = import.meta.env.VITE_API_URL;
 
 export default function Profile() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, refreshUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendMsg, setResendMsg] = useState('');
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
@@ -29,6 +34,21 @@ export default function Profile() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleResendVerification = async () => {
+    if (!user?._id || resending) return;
+    setResending(true);
+    setResendMsg('');
+    try {
+      await axios.post(`${API}/api/users/resend-verification`, { userId: user._id });
+      setResendMsg('Verification email sent! Check your inbox.');
+      setTimeout(() => setResendMsg(''), 5000);
+    } catch (error) {
+      setResendMsg(error.response?.data?.message || 'Failed to send. Try again.');
+    } finally {
+      setResending(false);
+    }
   };
 
   const handleSave = async () => {
@@ -87,9 +107,20 @@ export default function Profile() {
             <div>
               <h3 className="font-semibold text-gray-900">{user?.firstName} {user?.lastName}</h3>
               <p className="text-sm text-gray-500">{user?.email}</p>
-              <span className="inline-block mt-2 px-3 py-1 bg-primary-light text-primary text-xs font-medium rounded-full">
-                {user?.accountType === 'business' ? 'Business Account' : 'Individual Account'}
-              </span>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="inline-block px-3 py-1 bg-primary-light text-primary text-xs font-medium rounded-full">
+                  {user?.accountType === 'business' ? 'Business Account' : 'Individual Account'}
+                </span>
+                {user?.emailVerified ? (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                    <CheckCircle className="w-3 h-3" /> Email Verified
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
+                    <AlertCircle className="w-3 h-3" /> Email Unverified
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -181,6 +212,47 @@ export default function Profile() {
 
         {/* Settings Card */}
         <div className="space-y-6">
+          {/* Email Verification Card */}
+          <div className={`rounded-xl shadow-sm p-6 ${user?.emailVerified ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
+            <div className="flex items-center gap-2 mb-3">
+              {user?.emailVerified ? (
+                <CheckCircle className="w-5 h-5 text-green-600" />
+              ) : (
+                <AlertCircle className="w-5 h-5 text-amber-600" />
+              )}
+              <h3 className="font-semibold">Email Verification</h3>
+            </div>
+            {user?.emailVerified ? (
+              <>
+                <p className="text-sm text-green-700 mb-2">Your email is verified.</p>
+                <p className="text-xs text-green-600">You'll receive all tax reminders, booking confirmations, and security alerts.</p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-amber-700 mb-2">Your email is not verified yet.</p>
+                <p className="text-xs text-amber-600 mb-3">
+                  Verifying your email ensures you receive tax deadline reminders, booking confirmations, and protects your account from unauthorized access.
+                </p>
+                <button
+                  onClick={handleResendVerification}
+                  disabled={resending}
+                  className="w-full py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {resending ? (
+                    <><RefreshCw className="w-3 h-3 animate-spin" /> Sending...</>
+                  ) : (
+                    <><Mail className="w-3 h-3" /> Resend Verification Email</>
+                  )}
+                </button>
+                {resendMsg && (
+                  <p className={`text-xs mt-2 ${resendMsg.includes('sent') ? 'text-green-600' : 'text-red-600'}`}>
+                    {resendMsg}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+
           <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="flex items-center gap-2 mb-4">
               <Bell className="w-5 h-5 text-primary" />

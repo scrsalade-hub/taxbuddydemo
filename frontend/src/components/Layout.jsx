@@ -14,8 +14,12 @@ import {
   Headphones,
   Bell
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Mail, X, ShieldAlert } from 'lucide-react';
+import axios from 'axios';
 import ChatBot from './ChatBot';
+
+const API = import.meta.env.VITE_API_URL;
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
@@ -32,8 +36,35 @@ const premiumItems = [
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const [showVerifyBanner, setShowVerifyBanner] = useState(true);
+  const [resending, setResending] = useState(false);
+  const [resendMsg, setResendMsg] = useState('');
+  const { user, logout, refreshUser } = useAuth();
   const { unreadCount } = useNotifications();
+
+  const isEmailVerified = user?.emailVerified === true;
+
+  // Refresh user data on mount to get latest emailVerified status
+  useEffect(() => {
+    if (user && !isEmailVerified) {
+      refreshUser();
+    }
+  }, []);
+
+  const handleResendVerification = async () => {
+    if (!user?._id || resending) return;
+    setResending(true);
+    setResendMsg('');
+    try {
+      await axios.post(`${API}/api/users/resend-verification`, { userId: user._id });
+      setResendMsg('Verification email sent! Check your inbox.');
+      setTimeout(() => setResendMsg(''), 5000);
+    } catch (error) {
+      setResendMsg(error.response?.data?.message || 'Failed to send. Try again.');
+    } finally {
+      setResending(false);
+    }
+  };
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -213,6 +244,46 @@ export default function Layout() {
             </div>
           </div>
         </header>
+
+        {/* Email Verification Banner */}
+        {user && !isEmailVerified && showVerifyBanner && (
+          <div className="bg-amber-50 border-b border-amber-200 px-4 lg:px-8 py-3">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3 flex-1">
+                <ShieldAlert className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-amber-800">
+                    Please verify your email address
+                  </p>
+                  <p className="text-xs text-amber-700 mt-0.5">
+                    Verifying your email ensures you receive tax deadline reminders, booking confirmations, and account security alerts. It also protects your account from unauthorized access.
+                  </p>
+                  <div className="flex items-center gap-3 mt-2">
+                    <button
+                      onClick={handleResendVerification}
+                      disabled={resending}
+                      className="text-xs font-medium text-amber-800 underline hover:no-underline flex items-center gap-1 disabled:opacity-50"
+                    >
+                      <Mail className="w-3 h-3" />
+                      {resending ? 'Sending...' : 'Resend verification email'}
+                    </button>
+                    {resendMsg && (
+                      <span className={`text-xs ${resendMsg.includes('sent') ? 'text-green-600' : 'text-red-600'}`}>
+                        {resendMsg}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowVerifyBanner(false)}
+                className="p-1 text-amber-500 hover:text-amber-700 shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Page Content */}
         <main className="flex-1 p-4 lg:p-8 overflow-auto">
